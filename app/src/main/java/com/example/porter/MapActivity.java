@@ -10,6 +10,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -31,12 +33,16 @@ import android.widget.Toast;
 import com.skt.Tmap.TMapData;
 import com.skt.Tmap.TMapGpsManager;
 import com.skt.Tmap.TMapMarkerItem;
+import com.skt.Tmap.TMapMarkerItem2;
 import com.skt.Tmap.TMapPOIItem;
 import com.skt.Tmap.TMapPoint;
 import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class MapActivity extends AppCompatActivity {
     private TMapGpsManager tMapGps = null;
@@ -52,13 +58,13 @@ public class MapActivity extends AppCompatActivity {
     ArrayAdapter<POI> mAdapter;
     String keyword;
 
-    private boolean locationState = true;
+    private boolean locationState = false;
     private boolean startBtnState = false;
     private boolean endBtnState = false;
     private TMapPoint tMapPointStart = null;
     private TMapPoint tMapPointEnd = null;
-    //private TMapPoint tMapPointStart = new TMapPoint(35.17241886016579, 129.1263765979288);//영상물 등급위원회 : 35.17241886016579, 129.1263765979288 //혜화역 : 37.582191, 127.001915
-    //private TMapPoint tMapPointEnd = new TMapPoint(35.17127425152002, 129.12722778443444);//영화의 전당: 35.17127425152002, 129.12722778443444 // 역삼역 : 37.500628, 127.036392
+    //private TMapPoint tMapPointStart = new TMapPoint(35.17241886016579, 129.1263765979288);//영상물 등급위원회 : 35.17241886016579, 129.1263765979288
+    //private TMapPoint tMapPointEnd = new TMapPoint(35.17127425152002, 129.12722778443444);//영화의 전당: 35.17127425152002, 129.12722778443444
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,47 +79,13 @@ public class MapActivity extends AppCompatActivity {
 
 
         //상태바 투명 & 아이콘 회색
-        Window w = getWindow();
-        w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-        View view = getWindow().getDecorView();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (view != null) {
-                // 23 버전 이상일 때 상태바 하얀 색상에 회색 아이콘 색상을 설정
-                view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                getWindow().setStatusBarColor(Color.parseColor("#f2f2f2"));
-            }
-        } else if (Build.VERSION.SDK_INT >= 21) {
-            // 21 버전 이상일 때
-            getWindow().setStatusBarColor(Color.BLACK);
-        }
+        setStateBar();
 
-        //tmap
-        //--지도 부분
-        LinearLayout linearLayoutTmap = (LinearLayout) findViewById(R.id.tmap);
-        tMapView = new TMapView(this);
-        tMapView.setSKTMapApiKey(AppKey);
-        linearLayoutTmap.addView(tMapView);
-        //tMapView.setCenterPoint(127.001691,37.540263,  true);
+        //TMapAPI 활용(지도, 현재위치)
+        setTMap();
 
-        //--현재 위치
-        tMapGps = new TMapGpsManager(MapActivity.this);
-        setGps();
-        /* 현위치 아이콘표시 */
-        tMapView.setIconVisibility(true);
-        /* 줌레벨 */
-        tMapView.setZoomLevel(15);
-        tMapView.setMapType(TMapView.MAPTYPE_STANDARD);
-        tMapView.setLanguage(TMapView.LANGUAGE_KOREAN);
-        //tMapView.setCompassMode(true); //현재 보는 방향
-        /*현재 위치 마커 커스텀*/
-        //Bitmap bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.custom_poi_marker_end);
-        //tMapView.setIcon(bitmap);
-
-        //--경로 부분
-        //drawCashPath(tMapPointStart, tMapPointEnd);
-
-        //출발지 search 버튼 클릭 이벤트
+        //버튼 클릭 이벤트
+        /* 출발지 search 버튼 */
         Button btnStart = (Button) findViewById(R.id.btn_start);
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -123,22 +95,21 @@ public class MapActivity extends AppCompatActivity {
                 searchPOI();
             }
         });
-        //현재위치를 출발지로 설정 버튼
+        /* 현재위치를 출발지로 설정 버튼 */
         Button btnSetLocStart = (Button) findViewById(R.id.btn_setLocStart);
         btnSetLocStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 locationState = true;
                 //도착지가 null일 경우
-                if (tMapPointStart != null && tMapPointEnd!= null) {
+                if (tMapPointStart != null && tMapPointEnd != null) {
                     drawCashPath(tMapPointStart, tMapPointEnd);
-                }else if(tMapPointEnd == null) {
+                } else if (tMapPointEnd == null) {
                     Toast.makeText(getApplicationContext(), "도착지를 입력해주세요", Toast.LENGTH_SHORT).show();
                 }
             }
         });
-
-        //도착지 search 버튼 클릭 이벤트
+        /* 도착지 search 버튼 */
         Button btnEnd = (Button) findViewById(R.id.btn_end);
         btnEnd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -156,27 +127,68 @@ public class MapActivity extends AppCompatActivity {
                 POI poi = (POI) listView.getItemAtPosition(position);
                 moveMap(poi.item.getPOIPoint().getLatitude(), poi.item.getPOIPoint().getLongitude());
                 Log.e("선택된 좌표", "lat : " + String.valueOf(poi.item.getPOIPoint().getLatitude()) + " lon : " + poi.item.getPOIPoint().getLongitude());
-                
+
                 if (startBtnState == true) { //출발지 선택
                     tMapPointStart = new TMapPoint(poi.item.getPOIPoint().getLatitude(), poi.item.getPOIPoint().getLongitude());
                     startBtnState = false;
-                }else if(endBtnState == true) { //도착지 선택
+                    editStart.setText(poi.toString()); //장소명 setText
+                } else if (endBtnState == true) { //도착지 선택
                     tMapPointEnd = new TMapPoint(poi.item.getPOIPoint().getLatitude(), poi.item.getPOIPoint().getLongitude());
                     endBtnState = false;
+                    editEnd.setText(poi.toString()); //장소명 setText
                 }
-                
+
                 //출발지 or 도착지가 null일 때
-                if (tMapPointStart != null && tMapPointEnd!= null) {
+                if (tMapPointStart != null && tMapPointEnd != null) {
                     drawCashPath(tMapPointStart, tMapPointEnd);
-                }else if(tMapPointStart == null) {
+                } else if (tMapPointStart == null) {
                     Toast.makeText(getApplicationContext(), "출발지를 입력해주세요", Toast.LENGTH_SHORT).show();
-                }else if(tMapPointEnd == null) {
+                } else if (tMapPointEnd == null) {
                     Toast.makeText(getApplicationContext(), "도착지를 입력해주세요", Toast.LENGTH_SHORT).show();
                 }
+
             }
         });
     }
 
+    //상태바 투명 & 아이콘 회색 설정 함수
+    private void setStateBar() {
+        Window w = getWindow();
+        w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        View view = getWindow().getDecorView();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (view != null) {
+                // 23 버전 이상일 때 상태바 하얀 색상에 회색 아이콘 색상을 설정
+                view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                getWindow().setStatusBarColor(Color.parseColor("#f2f2f2"));
+            }
+        } else if (Build.VERSION.SDK_INT >= 21) {
+            // 21 버전 이상일 때
+            getWindow().setStatusBarColor(Color.BLACK);
+        }
+    }
+
+    //TMapAPI 활용(지도, 현재위치)
+    private void setTMap(){
+        /* 지도 부분 */
+        LinearLayout linearLayoutTmap = (LinearLayout) findViewById(R.id.tmap);
+        tMapView = new TMapView(this);
+        tMapView.setSKTMapApiKey(AppKey);
+        linearLayoutTmap.addView(tMapView);
+        /* 현재 위치 */
+        tMapGps = new TMapGpsManager(MapActivity.this);
+        setGps();
+        /* 현위치 아이콘표시 */
+        tMapView.setIconVisibility(true);
+        /* 줌레벨 */
+        tMapView.setZoomLevel(15);
+        tMapView.setMapType(TMapView.MAPTYPE_STANDARD);
+        tMapView.setLanguage(TMapView.LANGUAGE_KOREAN);
+        /*현재 위치 마커 커스텀*/
+        //Bitmap bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.custom_poi_marker_end);
+        //tMapView.setIcon(bitmap);
+    }
 
     /**
      * 현재 위치로 표시될 좌표의 위도, 경도를 설정한다.
@@ -191,6 +203,8 @@ public class MapActivity extends AppCompatActivity {
                 tMapView.setCenterPoint(longitude, latitude);
                 //--경로 부분 (한번 더 호출)
                 if (locationState == true) { //현재 위치를 출발지로 설정하고 싶으면 locationState가 true여야 함
+                    String address = getCurrentAddress(latitude, longitude); //현재 좌표->주소 반환
+                    editStart.setText(address); //장소명 setText
                     tMapPointStart = tMapView.getCenterPoint();
                     locationState = false;
                 }
@@ -272,7 +286,7 @@ public class MapActivity extends AppCompatActivity {
         item.setIcon(icon);
         item.setPosition(0.5f, 1);
         item.setCalloutTitle(poi.getPOIName());
-        item.setCalloutSubTitle(poi.getPOIContent());
+        //item.setCalloutSubTitle(poi.getPOIContent());
         item.setCanShowCallout(true);
         tMapView.addMarkerItem(poi.getPOIID(), item);
     }
@@ -281,4 +295,32 @@ public class MapActivity extends AppCompatActivity {
     private void moveMap(double lat, double lng) {
         tMapView.setCenterPoint(lng, lat);
     }
+
+    //좌표를 주소로 변환하는 함수
+    public String getCurrentAddress( double latitude, double longitude) {
+        //지오코더 - GPS를 주소로 변환
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        List<Address> addresses;
+        try {
+            addresses = geocoder.getFromLocation(
+                    latitude,
+                    longitude,
+                    7);
+        } catch (IOException ioException) {
+            //네트워크 문제
+            Toast.makeText(this, "지오코더 서비스 사용불가", Toast.LENGTH_LONG).show();
+            return "지오코더 서비스 사용불가";
+        } catch (IllegalArgumentException illegalArgumentException) {
+            Toast.makeText(this, "잘못된 GPS 좌표", Toast.LENGTH_LONG).show();
+            return "잘못된 GPS 좌표";
+        }
+        
+        if (addresses == null || addresses.size() == 0) {
+            Toast.makeText(this, "주소 미발견", Toast.LENGTH_LONG).show();
+            return "주소 미발견";
+        }
+        Address address = addresses.get(0);
+        return address.getAddressLine(0).toString()+"\n";
+    }
+
 }
