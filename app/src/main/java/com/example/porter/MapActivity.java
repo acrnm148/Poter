@@ -5,6 +5,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -17,11 +18,14 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Layout;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -51,13 +55,18 @@ public class MapActivity extends AppCompatActivity {
     private double lon;
     private double realdistance = 0; //거리값
     private static String AppKey = "l7xx2b1c5cd91b914c2c9c80aab1109ae5d3";
+    private long backKeyPressedTime = 0; // 마지막으로 뒤로 가기 버튼을 눌렀던 시간 저장
+    private Toast toast; // 첫 번째 뒤로 가기 버튼을 누를 때 표시
 
     ListView listView;
     EditText editStart;
     EditText editEnd;
     ArrayAdapter<POI> mAdapter;
     String keyword;
+    LinearLayout layout;
 
+    private double currentLatitude;
+    private double currentlongitude;
     private boolean locationState = false;
     private boolean startBtnState = false;
     private boolean endBtnState = false;
@@ -66,17 +75,24 @@ public class MapActivity extends AppCompatActivity {
     //private TMapPoint tMapPointStart = new TMapPoint(35.17241886016579, 129.1263765979288);//영상물 등급위원회 : 35.17241886016579, 129.1263765979288
     //private TMapPoint tMapPointEnd = new TMapPoint(35.17127425152002, 129.12722778443444);//영화의 전당: 35.17127425152002, 129.12722778443444
 
+
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE); //키보드 내리기
 
         editStart = (EditText) findViewById(R.id.edit_start);
         editEnd = (EditText) findViewById(R.id.edit_end);
         listView = (ListView) findViewById(R.id.listView);
+        layout = (LinearLayout) findViewById(R.id.tmap);
         mAdapter = new ArrayAdapter<POI>(this, android.R.layout.simple_list_item_1);
         listView.setAdapter(mAdapter);
+        listView.setVisibility(View.GONE); //listview 안보이게
 
+        editStart.selectAll();
+        editEnd.selectAll();
 
         //상태바 투명 & 아이콘 회색
         setStateBar();
@@ -90,9 +106,49 @@ public class MapActivity extends AppCompatActivity {
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startBtnState = true;
+                //startBtnState = true;
                 keyword = editStart.getText().toString();
                 searchPOI();
+                imm.hideSoftInputFromWindow(editStart.getWindowToken(), 0); //키보드 내리기
+            }
+        });
+        /* 출발지 editText 클릭이벤트 */
+        editStart.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch(event.getAction()) {
+                    case MotionEvent.ACTION_DOWN: {
+                        //터치했을 때의 이벤트
+                        startBtnState = true;
+                        break;
+                    }
+                }
+                return false;
+            }
+        });
+        /* 도착지 search 버튼 */
+        Button btnEnd = (Button) findViewById(R.id.btn_end);
+        btnEnd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //endBtnState = true;
+                keyword = editEnd.getText().toString();
+                searchPOI();
+                imm.hideSoftInputFromWindow(editEnd.getWindowToken(), 0); //키보드 내리기
+            }
+        });
+        /* 도착지 editText 클릭이벤트 */
+        editEnd.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch(event.getAction()) {
+                    case MotionEvent.ACTION_DOWN: {
+                        //터치했을 때의 이벤트
+                        endBtnState = true;
+                        break;
+                    }
+                }
+                return false;
             }
         });
         /* 현재위치를 출발지로 설정 버튼 */
@@ -101,24 +157,29 @@ public class MapActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 locationState = true;
-                //도착지가 null일 경우
+                LocationManager lm = (LocationManager)getSystemService(Context. LOCATION_SERVICE);
+                tMapView.removeAllMarkerItem(); //마커 안보이게
+            }
+        });
+        /* 길찾기 버튼 */
+        Button btnDraw = (Button) findViewById(R.id.btn_draw);
+        btnDraw.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                tMapView.removeAllMarkerItem(); //마커 안보이게
+                //출발지 or 도착지가 null일 때
                 if (tMapPointStart != null && tMapPointEnd != null) {
                     drawCashPath(tMapPointStart, tMapPointEnd);
-                } else if (tMapPointEnd == null) {
+                } else if (tMapPointStart == null && tMapPointEnd != null) {
+                    Toast.makeText(getApplicationContext(), "출발지를 입력해주세요", Toast.LENGTH_SHORT).show();
+                } else if (tMapPointStart != null && tMapPointEnd == null) {
                     Toast.makeText(getApplicationContext(), "도착지를 입력해주세요", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "출발지와 도착지를 입력해주세요", Toast.LENGTH_SHORT).show();
                 }
             }
         });
-        /* 도착지 search 버튼 */
-        Button btnEnd = (Button) findViewById(R.id.btn_end);
-        btnEnd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                endBtnState = true;
-                keyword = editEnd.getText().toString();
-                searchPOI();
-            }
-        });
+
 
         //listview 클릭 이벤트
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -126,30 +187,29 @@ public class MapActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 POI poi = (POI) listView.getItemAtPosition(position);
                 moveMap(poi.item.getPOIPoint().getLatitude(), poi.item.getPOIPoint().getLongitude());
-                Log.e("선택된 좌표", "lat : " + String.valueOf(poi.item.getPOIPoint().getLatitude()) + " lon : " + poi.item.getPOIPoint().getLongitude());
+                lat = poi.item.getPOIPoint().getLatitude();
+                lon = poi.item.getPOIPoint().getLongitude();
+                //Log.e("선택된 좌표", "lat : " + String.valueOf(lat) + " lon : " +lon);
 
                 if (startBtnState == true) { //출발지 선택
                     tMapPointStart = new TMapPoint(poi.item.getPOIPoint().getLatitude(), poi.item.getPOIPoint().getLongitude());
                     startBtnState = false;
                     editStart.setText(poi.toString()); //장소명 setText
+                    editStart.clearFocus(); //포커스 없앰
                 } else if (endBtnState == true) { //도착지 선택
                     tMapPointEnd = new TMapPoint(poi.item.getPOIPoint().getLatitude(), poi.item.getPOIPoint().getLongitude());
                     endBtnState = false;
                     editEnd.setText(poi.toString()); //장소명 setText
+                    editEnd.clearFocus(); //포커스 없앰
                 }
 
-                //출발지 or 도착지가 null일 때
-                if (tMapPointStart != null && tMapPointEnd != null) {
-                    drawCashPath(tMapPointStart, tMapPointEnd);
-                } else if (tMapPointStart == null) {
-                    Toast.makeText(getApplicationContext(), "출발지를 입력해주세요", Toast.LENGTH_SHORT).show();
-                } else if (tMapPointEnd == null) {
-                    Toast.makeText(getApplicationContext(), "도착지를 입력해주세요", Toast.LENGTH_SHORT).show();
-                }
-
+                listView.setVisibility(View.GONE); //주소 선택 후 listview 안보이게
             }
         });
-    }
+
+    } // -- onCreate()
+
+
 
     //상태바 투명 & 아이콘 회색 설정 함수
     private void setStateBar() {
@@ -170,7 +230,7 @@ public class MapActivity extends AppCompatActivity {
     }
 
     //TMapAPI 활용(지도, 현재위치)
-    private void setTMap(){
+    private void setTMap() {
         /* 지도 부분 */
         LinearLayout linearLayoutTmap = (LinearLayout) findViewById(R.id.tmap);
         tMapView = new TMapView(this);
@@ -190,6 +250,18 @@ public class MapActivity extends AppCompatActivity {
         //tMapView.setIcon(bitmap);
     }
 
+
+    private View.OnClickListener buttonRefreshClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+            // Update location to get.
+            LocationManager lm = (LocationManager)getSystemService(Context. LOCATION_SERVICE);
+
+            //lm.removeUpdates( mLocationListener );    // Stop the update if it is in progress.
+        }
+
+    };
     /**
      * 현재 위치로 표시될 좌표의 위도, 경도를 설정한다.
      */
@@ -197,13 +269,13 @@ public class MapActivity extends AppCompatActivity {
         public void onLocationChanged(Location location) {
 
             if (location != null) {
-                double latitude = location.getLatitude();
-                double longitude = location.getLongitude();
-                tMapView.setLocationPoint(longitude, latitude);
-                tMapView.setCenterPoint(longitude, latitude);
+                currentLatitude = location.getLatitude();
+                currentlongitude = location.getLongitude();
+                tMapView.setLocationPoint(currentlongitude, currentLatitude);
+                tMapView.setCenterPoint(currentlongitude, currentLatitude);
                 //--경로 부분 (한번 더 호출)
                 if (locationState == true) { //현재 위치를 출발지로 설정하고 싶으면 locationState가 true여야 함
-                    String address = getCurrentAddress(latitude, longitude); //현재 좌표->주소 반환
+                    String address = getCurrentAddress(currentLatitude, currentlongitude); //현재 좌표->주소 반환
                     editStart.setText(address); //장소명 setText
                     tMapPointStart = tMapView.getCenterPoint();
                     locationState = false;
@@ -230,7 +302,6 @@ public class MapActivity extends AppCompatActivity {
                 1000, // 통지사이의 최소 시간간격 (miliSecond)
                 1, // 통지사이의 최소 변경거리 (m)
                 mLocationListener);
-        tMapPointStart = tMapGps.getLocation();
     }
 
     // 경로 그리는 함수
@@ -251,6 +322,7 @@ public class MapActivity extends AppCompatActivity {
     //주소 검색
     private void searchPOI() {
         TMapData data = new TMapData();
+        listView.setVisibility(View.VISIBLE); //listview 보이게
 
         if (!TextUtils.isEmpty(keyword)) {
             data.findAllPOI(keyword, new TMapData.FindAllPOIListenerCallback() {
@@ -297,7 +369,7 @@ public class MapActivity extends AppCompatActivity {
     }
 
     //좌표를 주소로 변환하는 함수
-    public String getCurrentAddress( double latitude, double longitude) {
+    public String getCurrentAddress(double latitude, double longitude) {
         //지오코더 - GPS를 주소로 변환
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         List<Address> addresses;
@@ -314,13 +386,37 @@ public class MapActivity extends AppCompatActivity {
             Toast.makeText(this, "잘못된 GPS 좌표", Toast.LENGTH_LONG).show();
             return "잘못된 GPS 좌표";
         }
-        
+
         if (addresses == null || addresses.size() == 0) {
             Toast.makeText(this, "주소 미발견", Toast.LENGTH_LONG).show();
             return "주소 미발견";
         }
         Address address = addresses.get(0);
-        return address.getAddressLine(0).toString()+"\n";
+        return address.getAddressLine(0).toString() + "\n";
     }
+    
+    //뒤로가기 - listview 지우기, 앱 종료
+    public void onBackPressed() {
+        //super.onBackPressed();
+        // 기존 뒤로 가기 버튼의 기능을 막기 위해 주석 처리 또는 삭제
 
+        // 마지막으로 뒤로 가기 버튼을 눌렀던 시간에 2.5초를 더해 현재 시간과 비교 후
+        // 마지막으로 뒤로 가기 버튼을 눌렀던 시간이 2.5초가 지났으면 Toast 출력
+        // 2500 milliseconds = 2.5 seconds
+        if (System.currentTimeMillis() > backKeyPressedTime + 2500) {
+            backKeyPressedTime = System.currentTimeMillis();
+//            toast = Toast.makeText(this, "뒤로 가기 버튼을 한 번 더 누르시면 종료됩니다.", Toast.LENGTH_LONG);
+//            toast.show();
+            listView.setVisibility(View.GONE); //주소 선택 후 listview 안보이게
+            return;
+        }
+        // 마지막으로 뒤로 가기 버튼을 눌렀던 시간에 2.5초를 더해 현재 시간과 비교 후
+        // 마지막으로 뒤로 가기 버튼을 눌렀던 시간이 2.5초가 지나지 않았으면 종료
+        if (System.currentTimeMillis() <= backKeyPressedTime + 2500) {
+            finish();
+//            toast.cancel();
+//            toast = Toast.makeText(this,"이용해 주셔서 감사합니다.",Toast.LENGTH_LONG);
+//            toast.show();
+        }
+    }
 }
