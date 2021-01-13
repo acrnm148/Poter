@@ -32,6 +32,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.skt.Tmap.TMapData;
@@ -152,8 +153,17 @@ public class MapActivity extends AppCompatActivity {
             }
         });
         /* 현재위치를 출발지로 설정 버튼 */
-        Button btnSetLocStart = (Button) findViewById(R.id.btn_setLocStart);
-        btnSetLocStart.setOnClickListener(new View.OnClickListener() {
+//        Button btnSetLocStart = (Button) findViewById(R.id.btn_setLocStart);
+//        btnSetLocStart.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                locationState = true;
+//                LocationManager lm = (LocationManager)getSystemService(Context. LOCATION_SERVICE);
+//                tMapView.removeAllMarkerItem(); //마커 안보이게
+//            }
+//        });
+        TextView tvSetLocStart = (TextView)  findViewById(R.id.tv_setLocStart);
+        tvSetLocStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 locationState = true;
@@ -310,7 +320,7 @@ public class MapActivity extends AppCompatActivity {
         tmapdata.findPathDataWithType(TMapData.TMapPathType.PEDESTRIAN_PATH, tMapPointStart, tMapPointEnd, new TMapData.FindPathDataListenerCallback() {
             @Override
             public void onFindPathData(TMapPolyLine polyLine) {
-                polyLine.setLineColor(Color.BLUE);
+                polyLine.setLineColor(Color.BLUE); // Color.rgb(85, 90, 181)
                 tMapView.addTMapPath(polyLine);
                 realdistance = polyLine.getDistance(); //거리
                 Log.e("(경로그리는함수)", "거리 : " + String.valueOf(realdistance) + "m  " + "출발 : " + tMapPointStart + "  도착 : " + tMapPointEnd);
