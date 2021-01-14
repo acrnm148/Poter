@@ -3,8 +3,7 @@
 
 # Screenshots
 
-
 <div>
-<img width="400" src = "https://user-images.githubusercontent.com/67724306/104547116-1ba4a400-5671-11eb-9796-0956a2cea719.jpg">
+<img width="400" src = "https://user-images.githubusercontent.com/67724306/104550741-d2585280-5678-11eb-8dad-bc6012d48f85.jpg">
 <img width="400" src = "https://user-images.githubusercontent.com/67724306/104547122-1cd5d100-5671-11eb-8621-96a445b95b5b.jpg">
 </div>
