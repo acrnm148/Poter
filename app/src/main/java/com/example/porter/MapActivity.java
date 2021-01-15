@@ -30,6 +30,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -176,6 +177,16 @@ public class MapActivity extends AppCompatActivity {
                 return false;
             }
         });
+        /* 출발지 text 삭제 및 경로 제거 */
+        ImageView cancelSta = (ImageView) findViewById(R.id.cancel_st);
+        cancelSta.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                tMapView.removeTMapPath();//경로 제거
+                editStart.setText(null);//text 삭제
+            }
+        });
+
         /* 도착지 search 버튼 */
         Button btnEnd = (Button) findViewById(R.id.btn_end);
         btnEnd.setOnClickListener(new View.OnClickListener() {
@@ -201,6 +212,16 @@ public class MapActivity extends AppCompatActivity {
                 return false;
             }
         });
+        /* 도착지 text 삭제 및 경로 제거 */
+        ImageView cancelFin = (ImageView) findViewById(R.id.cancel_fin);
+        cancelFin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                tMapView.removeTMapPath();//경로 제거
+                editEnd.setText(null);//text 삭제
+            }
+        });
+
         /* 현재위치를 출발지로 설정 버튼 */
 //        Button btnSetLocStart = (Button) findViewById(R.id.btn_setLocStart);
 //        btnSetLocStart.setOnClickListener(new View.OnClickListener() {

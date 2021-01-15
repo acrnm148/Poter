@@ -40,25 +40,36 @@
                 android:layout_weight="1"
                 android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/edit_start"
+                <FrameLayout
                     android:layout_width="300dp"
-                    android:layout_height="40dp"
-                    android:layout_gravity="center"
-                    android:layout_weight="1"
-                    android:background="@drawable/round_border_text"
-                    android:ems="10"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:hint="출발지를 입력하세요"
-                    android:inputType="textPersonName"
-                    android:paddingLeft="10dp"
-                    android:selectAllOnFocus="true" />
+                    android:layout_height="50dp"
+                    android:layout_weight="1">
 
-                <Space
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
+                    <EditText
+                        android:id="@+id/edit_start"
+                        android:layout_width="320dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/round_border_text"
+                        android:ems="10"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:hint="출발지를 입력하세요"
+                        android:inputType="textPersonName"
+                        android:paddingLeft="10dp"
+                        android:selectAllOnFocus="true" />
+
+                    <ImageView
+                        android:id="@+id/cancel_st"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="right|center_vertical"
+                        android:layout_margin="10dp"
+                        android:layout_weight="1"
+                        app:srcCompat="@drawable/cancel" />
+
+                </FrameLayout>
+
 
                 <Button
                     android:id="@+id/btn_start"
@@ -67,11 +78,12 @@
                     android:layout_weight="1"
                     android:clickable="true"
                     android:text="검색"
-                    android:textSize="9sp"
+                    android:textSize="12sp"
                     android:textStyle="bold"
                     app:backgroundTint="#5559b4" />
 
             </LinearLayout>
+
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -79,36 +91,44 @@
                 android:layout_weight="1"
                 android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/edit_end"
+                <FrameLayout
                     android:layout_width="300dp"
-                    android:layout_height="40dp"
-                    android:layout_gravity="center"
-                    android:layout_weight="1"
-                    android:background="@drawable/round_border_text"
-                    android:ems="10"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:hint="도착지를 입력하세요"
-                    android:inputType="textPersonName"
-                    android:paddingLeft="10dp"
-                    android:selectAllOnFocus="true" />
+                    android:layout_height="50dp"
+                    android:layout_weight="1">
 
-                <Space
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
+                    <EditText
+                        android:id="@+id/edit_end"
+                        android:layout_width="320dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/round_border_text"
+                        android:ems="10"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:hint="도착지를 입력하세요"
+                        android:inputType="textPersonName"
+                        android:paddingLeft="10dp"
+                        android:selectAllOnFocus="true" />
 
+                    <ImageView
+                        android:id="@+id/cancel_fin"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="right|center_vertical"
+                        android:layout_margin="10dp"
+                        android:layout_weight="1"
+                        app:srcCompat="@drawable/cancel" />
+
+                </FrameLayout>
                 <Button
                     android:id="@+id/btn_end"
                     android:layout_width="45dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="검색"
-                    android:textSize="8sp"
+                    android:textSize="12sp"
                     android:textStyle="bold"
                     app:backgroundTint="#5559b4" />
-
             </LinearLayout>
 
             <Button
@@ -120,14 +140,6 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 app:backgroundTint="#5559b4" />
-
-            <!--        <Button-->
-            <!--            android:id="@+id/btn_setLocStart"-->
-            <!--            android:layout_width="63dp"-->
-            <!--            android:layout_height="14dp"-->
-            <!--            android:layout_weight="1"-->
-            <!--            android:text="현위치를 출발지로"-->
-            <!--            android:textSize="10sp" />-->
 
         </LinearLayout>
     </LinearLayout>
