@@ -60,7 +60,6 @@ public class MapActivity extends AppCompatActivity {
     private long backKeyPressedTime = 0; // 마지막으로 뒤로 가기 버튼을 눌렀던 시간 저장
     private Toast toast; // 첫 번째 뒤로 가기 버튼을 누를 때 표시
 
-
     ListView listView;
     EditText editStart;
     EditText editEnd;
@@ -70,7 +69,7 @@ public class MapActivity extends AppCompatActivity {
 
     private double currentLatitude;
     private double currentlongitude;
-    private boolean locationState = false;
+    private boolean locationState = true; //현위치로 이동 여부
     private boolean startBtnState = false;
     private boolean endBtnState = false;
     private TMapPoint tMapPointStart = null;
@@ -103,15 +102,12 @@ public class MapActivity extends AppCompatActivity {
         //TMapAPI 활용(지도, 현재위치)
         setTMap();
 
-        //현재위치
-        //add
+        //현재위치를 받아오는 부분
         TMapGpsManager gps = new TMapGpsManager(this);
         gps.setMinTime(1000);
         gps.setMinDistance(5);
         gps.setProvider(gps.GPS_PROVIDER);
         gps.OpenGps();
-
-
         LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         LocationListener mLocationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
@@ -120,16 +116,11 @@ public class MapActivity extends AppCompatActivity {
                     currentLatitude = location.getLatitude();
                     currentlongitude = location.getLongitude();
                     tMapView.setLocationPoint(currentlongitude, currentLatitude);
-                    tMapView.setCenterPoint(currentlongitude, currentLatitude); //지도 센터에 처음 한번만 뜨게 수정해라
-                    //--경로 부분 (한번 더 호출)
-                    if (locationState == true) { //현재 위치를 출발지로 설정하고 싶으면 locationState가 true여야 함
-                        String address = getCurrentAddress(currentLatitude, currentlongitude); //현재 좌표->주소 반환
-                        editStart.setText(address); //장소명 setText
-                        tMapPointStart = tMapView.getCenterPoint();
+                    if (locationState==true) {
+                        tMapView.setCenterPoint(currentlongitude, currentLatitude); //지도 센터에 처음 한번만 뜨게 수정해라
                         locationState = false;
                     }
                 }
-
             }
             public void onProviderDisabled(String provider) { }
             public void onProviderEnabled(String provider) { }
@@ -137,18 +128,10 @@ public class MapActivity extends AppCompatActivity {
         };
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, mLocationListener);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocationListener);
-
 
 
         //버튼 클릭 이벤트
@@ -184,9 +167,9 @@ public class MapActivity extends AppCompatActivity {
             public void onClick(View view) {
                 tMapView.removeTMapPath();//경로 제거
                 editStart.setText(null);//text 삭제
+                tMapPointStart = null; //출발지 초기화
             }
         });
-
         /* 도착지 search 버튼 */
         Button btnEnd = (Button) findViewById(R.id.btn_end);
         btnEnd.setOnClickListener(new View.OnClickListener() {
@@ -219,27 +202,24 @@ public class MapActivity extends AppCompatActivity {
             public void onClick(View view) {
                 tMapView.removeTMapPath();//경로 제거
                 editEnd.setText(null);//text 삭제
+                tMapPointEnd = null; //도착지 초기화
             }
         });
-
-        /* 현재위치를 출발지로 설정 버튼 */
-//        Button btnSetLocStart = (Button) findViewById(R.id.btn_setLocStart);
-//        btnSetLocStart.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                locationState = true;
-//                LocationManager lm = (LocationManager)getSystemService(Context. LOCATION_SERVICE);
-//                tMapView.removeAllMarkerItem(); //마커 안보이게
-//            }
-//        });
+        /* 현위치를 출발지로 설정 버튼 */
         TextView tvSetLocStart = (TextView)  findViewById(R.id.tv_setLocStart);
         tvSetLocStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                locationState = true;
-                LocationManager lm = (LocationManager)getSystemService(Context. LOCATION_SERVICE);
-                //여기서 현재위치를 editText에
+                TMapPoint tpoint = tMapView.getLocationPoint();
+                double Latitude_ = tpoint.getLatitude(); //위도
+                double Longitude_ = tpoint.getLongitude(); //경도
+                String address_ = getCurrentAddress(Latitude_,Longitude_); //주소
 
+                tMapView.setCenterPoint(Longitude_, Latitude_); //현위치를 지도 중심
+
+                LocationManager lm = (LocationManager)getSystemService(Context. LOCATION_SERVICE);
+                editStart.setText(address_); //장소명 setText
+                tMapPointStart = tMapView.getLocationPoint(); //출발지에 현위치 좌표 넣기
                 tMapView.removeAllMarkerItem(); //마커 안보이게
             }
         });
@@ -318,57 +298,6 @@ public class MapActivity extends AppCompatActivity {
         tMapView = new TMapView(this);
         tMapView.setSKTMapApiKey(AppKey);
         linearLayoutTmap.addView(tMapView);
-        /* 현재 위치 */
-        //원래는 이거 한줄
-        //tMapGps = new TMapGpsManager(MapActivity.this);
-
-//        //add
-//        TMapGpsManager gps = new TMapGpsManager(this);
-//        gps.setMinTime(1000);
-//        gps.setMinDistance(5);
-//        gps.setProvider(gps.GPS_PROVIDER);
-//        gps.OpenGps();
-//
-//
-//        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-//        LocationListener mLocationListener = new LocationListener() {
-//            public void onLocationChanged(Location location) {
-//
-//                if (location != null) {
-//                    currentLatitude = location.getLatitude();
-//                    currentlongitude = location.getLongitude();
-//                    tMapView.setLocationPoint(currentlongitude, currentLatitude);
-//                    tMapView.setCenterPoint(currentlongitude, currentLatitude); //지도 센터에 처음 한번만 뜨게 수정해라
-//                    //--경로 부분 (한번 더 호출)
-//                    if (locationState == true) { //현재 위치를 출발지로 설정하고 싶으면 locationState가 true여야 함
-//                        String address = getCurrentAddress(currentLatitude, currentlongitude); //현재 좌표->주소 반환
-//                        editStart.setText(address); //장소명 setText
-//                        tMapPointStart = tMapView.getCenterPoint();
-//                        locationState = false;
-//                    }
-//                }
-//            }
-//            public void onProviderDisabled(String provider) { }
-//            public void onProviderEnabled(String provider) { }
-//            public void onStatusChanged(String provider, int status, Bundle extras) { }
-//        };
-//
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            // TODO: Consider calling
-//            //    ActivityCompat#requestPermissions
-//            // here to request the missing permissions, and then overriding
-//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//            //                                          int[] grantResults)
-//            // to handle the case where the user grants the permission. See the documentation
-//            // for ActivityCompat#requestPermissions for more details.
-//            return;
-//        }
-//        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, mLocationListener);
-//        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocationListener);
-
-
-
-
         /* 현위치 아이콘표시 */
         tMapView.setIconVisibility(true);
         /* 줌레벨 */
@@ -379,43 +308,6 @@ public class MapActivity extends AppCompatActivity {
         //Bitmap bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.custom_poi_marker_end);
         //tMapView.setIcon(bitmap);
     }
-
-
-    /**
-     * 현재 위치로 표시될 좌표의 위도, 경도를 설정한다.
-     */
-//    private final LocationListener mLocationListener = new LocationListener() {
-//        public void onLocationChanged(Location location) {
-//
-//            if (location != null) {
-//                currentLatitude = location.getLatitude();
-//                currentlongitude = location.getLongitude();
-//                tMapView.setLocationPoint(currentlongitude, currentLatitude);
-//                tMapView.setCenterPoint(currentlongitude, currentLatitude); //지도 센터에 처음 한번만 뜨게 수정해라
-//                //--경로 부분 (한번 더 호출)
-//                if (locationState == true) { //현재 위치를 출발지로 설정하고 싶으면 locationState가 true여야 함
-//                    String address = getCurrentAddress(currentLatitude, currentlongitude); //현재 좌표->주소 반환
-//                    editStart.setText(address); //장소명 setText
-//                    tMapPointStart = tMapView.getCenterPoint();
-//                    locationState = false;
-//                }
-//            }
-//        }
-//        public void onProviderDisabled(String provider) { }
-//        public void onProviderEnabled(String provider) { }
-//        public void onStatusChanged(String provider, int status, Bundle extras) { }
-//    };
-
-//    public void setGps() {
-//        final LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION, android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-//        }
-//        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, // 등록할 위치제공자(실내에선 NETWORK_PROVIDER 권장)
-//                1000, // 통지사이의 최소 시간간격 (miliSecond)
-//                1, // 통지사이의 최소 변경거리 (m)
-//                mLocationListener);
-//    }
 
     // 경로 그리는 함수
     public void drawCashPath(TMapPoint tMapPointStart, TMapPoint tMapPointEnd) {
@@ -515,17 +407,12 @@ public class MapActivity extends AppCompatActivity {
         // 마지막으로 뒤로 가기 버튼을 눌렀던 시간에 2.5초를 더해 현재 시간과 비교 후 마지막으로 뒤로 가기 버튼을 눌렀던 시간이 2.5초가 지났으면 Toast 출력
         if (System.currentTimeMillis() > backKeyPressedTime + 2500) {
             backKeyPressedTime = System.currentTimeMillis();
-            //toast = Toast.makeText(this, "뒤로 가기 버튼을 한 번 더 누르시면 종료됩니다.", Toast.LENGTH_LONG);
-            //toast.show();
             listView.setVisibility(View.GONE); //주소 선택 후 listview 안보이게
             return;
         }
         // 마지막으로 뒤로 가기 버튼을 눌렀던 시간에 2.5초를 더해 현재 시간과 비교 후 마지막으로 뒤로 가기 버튼을 눌렀던 시간이 2.5초가 지나지 않았으면 종료
         if (System.currentTimeMillis() <= backKeyPressedTime + 2500) {
             finish();
-            //toast.cancel();
-            //toast = Toast.makeText(this,"이용해 주셔서 감사합니다.",Toast.LENGTH_LONG);
-            //toast.show();
         }
     }
 }
