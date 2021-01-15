@@ -23,16 +23,35 @@
             android:paddingRight="10dp"
             android:paddingBottom="10dp">
 
-            <TextView
-                android:id="@+id/tv_setLocStart"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
                 android:layout_weight="1"
-                android:clickable="true"
-                android:text="현위치를 출발지로"
-                android:textColor="@drawable/text_click"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_setLocStart"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:text="현위치를 출발지로"
+                    android:textColor="@drawable/text_click"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_moveLoc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:text="현위치 보기"
+                    android:textColor="@drawable/text_click"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:gravity="right"/>
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"

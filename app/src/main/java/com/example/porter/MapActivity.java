@@ -223,6 +223,17 @@ public class MapActivity extends AppCompatActivity {
                 tMapView.removeAllMarkerItem(); //마커 안보이게
             }
         });
+        /* 현위치 보기 버튼 */
+        TextView tvMoveLoc = (TextView)  findViewById(R.id.tv_moveLoc);
+        tvMoveLoc.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TMapPoint tpoint = tMapView.getLocationPoint();
+                double Latitude_ = tpoint.getLatitude(); //위도
+                double Longitude_ = tpoint.getLongitude(); //경도
+                tMapView.setCenterPoint(Longitude_, Latitude_);
+            }
+        });
         /* 길찾기 버튼 */
         Button btnDraw = (Button) findViewById(R.id.btn_draw);
         btnDraw.setOnClickListener(new View.OnClickListener() {
@@ -241,7 +252,6 @@ public class MapActivity extends AppCompatActivity {
                 }
             }
         });
-
 
         //listview 클릭 이벤트
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
