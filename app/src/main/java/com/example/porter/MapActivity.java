@@ -36,6 +36,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.skt.Tmap.TMapData;
 import com.skt.Tmap.TMapGpsManager;
 import com.skt.Tmap.TMapMarkerItem;
@@ -45,12 +51,16 @@ import com.skt.Tmap.TMapPoint;
 import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
-public class MapActivity extends AppCompatActivity {
+public class MapActivity extends AppCompatActivity{
     private TMapGpsManager tMapGps = null;
     private TMapView tMapView;
     private double lat;
@@ -60,9 +70,21 @@ public class MapActivity extends AppCompatActivity {
     private long backKeyPressedTime = 0; // 마지막으로 뒤로 가기 버튼을 눌렀던 시간 저장
     private Toast toast; // 첫 번째 뒤로 가기 버튼을 누를 때 표시
 
+    private int choiceRoute = 0; //경로 종류 선택받음
+    /**
+     - 0: 교통최적+추천(기본값)
+     - 1: 교통최적+무료우선
+     - 2: 교통최적+최소시간
+     - 3: 교통최적+초보
+     - 4: 교통최적+고속도로우선
+     - 10: 최단거리+유/무료
+     - 12: 이륜차도로우선 (일반도로가 없는 경우 자동차 전용도로로 안내 할 수 있습니다.)
+     - 19: 교통최적+어린이보호구역 회피
+*/
     ListView listView;
     EditText editStart;
     EditText editEnd;
+    TextView textView;
     ArrayAdapter<POI> mAdapter;
     String keyword;
     LinearLayout layout;
@@ -74,8 +96,8 @@ public class MapActivity extends AppCompatActivity {
     private boolean endBtnState = false;
     private TMapPoint tMapPointStart = null;
     private TMapPoint tMapPointEnd = null;
-    //private TMapPoint tMapPointStart = new TMapPoint(35.17241886016579, 129.1263765979288);//영상물 등급위원회 : 35.17241886016579, 129.1263765979288
-    //private TMapPoint tMapPointEnd = new TMapPoint(35.17127425152002, 129.12722778443444);//영화의 전당: 35.17127425152002, 129.12722778443444
+    //private TMapPoint tMapPointStart = new TMapPoint(35.17241886016579, 129.1263765979288);//영상물 등급위원회
+    //private TMapPoint tMapPointEnd = new TMapPoint(35.17127425152002, 129.12722778443444);//영화의 전당
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -93,6 +115,7 @@ public class MapActivity extends AppCompatActivity {
         listView.setAdapter(mAdapter);
         listView.setVisibility(View.GONE); //listview 안보이게
 
+        //터치하면 텍스트 전체 선택
         editStart.selectAll();
         editEnd.selectAll();
 
@@ -117,7 +140,7 @@ public class MapActivity extends AppCompatActivity {
                     currentlongitude = location.getLongitude();
                     tMapView.setLocationPoint(currentlongitude, currentLatitude);
                     if (locationState==true) {
-                        tMapView.setCenterPoint(currentlongitude, currentLatitude); //지도 센터에 처음 한번만 뜨게 수정해라
+                        tMapView.setCenterPoint(currentlongitude, currentLatitude); //지도 센터에 처음 한번만 뜨게함
                         locationState = false;
                     }
                 }
@@ -322,14 +345,14 @@ public class MapActivity extends AppCompatActivity {
     // 경로 그리는 함수
     public void drawCashPath(TMapPoint tMapPointStart, TMapPoint tMapPointEnd) {
         TMapData tmapdata = new TMapData();
-        tmapdata.findPathDataWithType(TMapData.TMapPathType.CAR_PATH, tMapPointStart, tMapPointEnd, new TMapData.FindPathDataListenerCallback() {
+        ArrayList passList = new ArrayList<>();
+        //자동차 다중 경로
+        tmapdata.findPathDataWithType(TMapData.TMapPathType.CAR_PATH, tMapPointStart, tMapPointEnd, passList, choiceRoute, new TMapData.FindPathDataListenerCallback() {
             @Override
             public void onFindPathData(TMapPolyLine polyLine) {
                 polyLine.setLineColor(Color.BLUE); // Color.rgb(85, 90, 181)
                 tMapView.addTMapPath(polyLine);
                 realdistance = polyLine.getDistance(); //거리
-                Log.e("(경로그리는함수)", "거리 : " + String.valueOf(realdistance) + "m  " + "출발 : " + tMapPointStart + "  도착 : " + tMapPointEnd);
-                //setGps();
             }
         });
     }
@@ -425,4 +448,5 @@ public class MapActivity extends AppCompatActivity {
             finish();
         }
     }
+
 }
