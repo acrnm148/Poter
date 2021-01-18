@@ -10,14 +10,14 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="261dp"
+        android:layout_height="291dp"
         android:background="@drawable/round_border"
         android:orientation="horizontal"
         android:paddingTop="52dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="206dp"
+            android:layout_height="260dp"
             android:orientation="vertical"
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
@@ -25,7 +25,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="15dp"
                 android:layout_weight="1"
                 android:orientation="horizontal">
 
@@ -151,16 +151,90 @@
                     app:backgroundTint="#5559b4" />
             </LinearLayout>
 
-            <Button
-                android:id="@+id/btn_draw"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clickable="true"
-                android:text="길찾기"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:backgroundTint="#5559b4" />
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ScrollView
+                        android:layout_width="fill_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginLeft="5dip"
+                        android:orientation="vertical">
+
+                        <RadioGroup
+                            android:id="@+id/radioGroup"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content">
+
+                            <RadioButton
+                                android:id="@+id/btn0"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:checked="true"
+                                android:text="교통최적+추천(기본값)" />
+
+                            <RadioButton
+                                android:id="@+id/btn1"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="교통최적+무료우선" />
+
+                            <RadioButton
+                                android:id="@+id/btn2"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="교통최적+최소시간" />
+
+                            <RadioButton
+                                android:id="@+id/btn3"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="교통최적+초보" />
+
+                            <RadioButton
+                                android:id="@+id/btn4"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="교통최적+고속도로우선" />
+
+                            <RadioButton
+                                android:id="@+id/btn10"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="최단거리+유/무료" />
+
+                            <RadioButton
+                                android:id="@+id/btn12"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="이륜차도로우선 (일반도로가 없는 경우 자동차 전용도로로 안내 할 수 있습니다.)" />
+
+                            <RadioButton
+                                android:id="@+id/btn19"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="교통최적+어린이보호구역 회피" />
+                        </RadioGroup>
+                    </ScrollView>
+
+                    <Button
+                        android:id="@+id/btn_draw"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="40dp"
+                        android:clickable="true"
+                        android:text="길찾기"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="#5559b4" />
+                </FrameLayout>
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
@@ -173,7 +247,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
-
 
             <ListView
                 android:id="@+id/listView"

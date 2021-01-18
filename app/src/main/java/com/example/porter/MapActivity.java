@@ -18,6 +18,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Layout;
 import android.text.TextUtils;
 import android.util.Log;
@@ -33,15 +34,11 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.skt.Tmap.TMapData;
 import com.skt.Tmap.TMapGpsManager;
 import com.skt.Tmap.TMapMarkerItem;
@@ -69,7 +66,7 @@ public class MapActivity extends AppCompatActivity{
     private static String AppKey = "l7xx2b1c5cd91b914c2c9c80aab1109ae5d3";
     private long backKeyPressedTime = 0; // 마지막으로 뒤로 가기 버튼을 눌렀던 시간 저장
     private Toast toast; // 첫 번째 뒤로 가기 버튼을 누를 때 표시
-
+    private RadioGroup radioGroup;
     private int choiceRoute = 0; //경로 종류 선택받음
     /**
      - 0: 교통최적+추천(기본값)
@@ -302,6 +299,22 @@ public class MapActivity extends AppCompatActivity{
             }
         });
 
+        //우선 경로 설정 라디오 버튼
+        radioGroup = (RadioGroup) findViewById(R.id.radioGroup);
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if(checkedId == R.id.btn0){ choiceRoute = 0;}
+                else if(checkedId == R.id.btn1){ choiceRoute = 1; }
+                else if(checkedId == R.id.btn2){ choiceRoute = 2; }
+                else if(checkedId == R.id.btn3){ choiceRoute = 3; }
+                else if(checkedId == R.id.btn4){ choiceRoute = 4; }
+                else if(checkedId == R.id.btn10){ choiceRoute = 10; }
+                else if(checkedId == R.id.btn12){ choiceRoute = 12; }
+                else if(checkedId == R.id.btn19){ choiceRoute = 19; }
+            }
+        });
+
     } // -- onCreate()
 
 
@@ -342,12 +355,13 @@ public class MapActivity extends AppCompatActivity{
         //tMapView.setIcon(bitmap);
     }
 
+
     // 경로 그리는 함수
     public void drawCashPath(TMapPoint tMapPointStart, TMapPoint tMapPointEnd) {
         TMapData tmapdata = new TMapData();
         ArrayList passList = new ArrayList<>();
         //자동차 다중 경로
-        tmapdata.findPathDataWithType(TMapData.TMapPathType.CAR_PATH, tMapPointStart, tMapPointEnd, passList, choiceRoute, new TMapData.FindPathDataListenerCallback() {
+        tmapdata.findPathDataWithType(TMapData.TMapPathType.CAR_PATH, tMapPointStart, tMapPointEnd, null, choiceRoute, new TMapData.FindPathDataListenerCallback() {
             @Override
             public void onFindPathData(TMapPolyLine polyLine) {
                 polyLine.setLineColor(Color.BLUE); // Color.rgb(85, 90, 181)
@@ -432,7 +446,7 @@ public class MapActivity extends AppCompatActivity{
         Address address = addresses.get(0);
         return address.getAddressLine(0).toString() + "\n";
     }
-    
+
     //뒤로가기 - listview 지우기, 앱 종료
     public void onBackPressed() {
         //super.onBackPressed(); // 기존 뒤로 가기 버튼의 기능을 막기 위해 주석 처리 또는 삭제
