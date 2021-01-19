@@ -191,6 +191,7 @@ public class MapActivity extends AppCompatActivity{
                 tMapView.removeTMapPath();//경로 제거
                 editStart.setText(null);//text 삭제
                 tMapPointStart = null; //출발지 초기화
+                listView.setVisibility(View.GONE); //listview 숨기기
             }
         });
         /* 도착지 search 버튼 */
@@ -226,6 +227,7 @@ public class MapActivity extends AppCompatActivity{
                 tMapView.removeTMapPath();//경로 제거
                 editEnd.setText(null);//text 삭제
                 tMapPointEnd = null; //도착지 초기화
+                listView.setVisibility(View.GONE); //listview 숨기기
             }
         });
         /* 현위치를 출발지로 설정 버튼 */
