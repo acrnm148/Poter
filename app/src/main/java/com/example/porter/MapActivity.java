@@ -36,6 +36,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -66,7 +67,8 @@ public class MapActivity extends AppCompatActivity{
     private static String AppKey = "l7xx2b1c5cd91b914c2c9c80aab1109ae5d3";
     private long backKeyPressedTime = 0; // 마지막으로 뒤로 가기 버튼을 눌렀던 시간 저장
     private Toast toast; // 첫 번째 뒤로 가기 버튼을 누를 때 표시
-    private RadioGroup radioGroup;
+    private String[] item;
+    private int routeNum;
     private int choiceRoute = 0; //경로 종류 선택받음
     /**
      - 0: 교통최적+추천(기본값)
@@ -77,11 +79,12 @@ public class MapActivity extends AppCompatActivity{
      - 10: 최단거리+유/무료
      - 12: 이륜차도로우선 (일반도로가 없는 경우 자동차 전용도로로 안내 할 수 있습니다.)
      - 19: 교통최적+어린이보호구역 회피
-*/
+    */
     ListView listView;
     EditText editStart;
     EditText editEnd;
     TextView textView;
+    Spinner spinner;
     ArrayAdapter<POI> mAdapter;
     String keyword;
     LinearLayout layout;
@@ -299,22 +302,41 @@ public class MapActivity extends AppCompatActivity{
             }
         });
 
-        //우선 경로 설정 라디오 버튼
-        radioGroup = (RadioGroup) findViewById(R.id.radioGroup);
-        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+        //우선 경로 설정 부분
+        item = new String[]{"원하는 경로를 선택해주세요 (추천경로)","추천경로", "무료도로", "최소시간" , "편한길 우선",
+                "고속도로 우선", "최단거리", "이륜차 통행가능", "어린이 보호"};
+        spinner = (Spinner) findViewById(R.id.spinner_field);
+        //문자열 배열과 기본 스피너 레이아웃을 사용하여 ArrayAdapter 만들기
+        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, item);
+        //선택목록이 나타날때 사용할 레이아웃을 지정
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        //스피너에 어댑터 적용
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+
             @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if(checkedId == R.id.btn0){ choiceRoute = 0;}
-                else if(checkedId == R.id.btn1){ choiceRoute = 1; }
-                else if(checkedId == R.id.btn2){ choiceRoute = 2; }
-                else if(checkedId == R.id.btn3){ choiceRoute = 3; }
-                else if(checkedId == R.id.btn4){ choiceRoute = 4; }
-                else if(checkedId == R.id.btn10){ choiceRoute = 10; }
-                else if(checkedId == R.id.btn12){ choiceRoute = 12; }
-                else if(checkedId == R.id.btn19){ choiceRoute = 19; }
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                //Toast.makeText(getApplicationContext(), categories[position], Toast.LENGTH_SHORT).show();
+                if(spinner.getSelectedItemPosition() > 0){
+                    //선택된 항목
+                    routeNum = spinner.getSelectedItemPosition();
+                    if(routeNum == 1) {choiceRoute = 0;}
+                    else if(routeNum == 2) {choiceRoute = 1;}
+                    else if(routeNum == 3) {choiceRoute = 2;}
+                    else if(routeNum == 4) {choiceRoute = 3;}
+                    else if(routeNum == 5) {choiceRoute = 4;}
+                    else if(routeNum == 6) {choiceRoute = 10;}
+                    else if(routeNum == 7) {choiceRoute = 12;}
+                    else if(routeNum == 8) {choiceRoute = 19;}
+                    Log.v("알림",routeNum + spinner.getSelectedItem().toString()+ "is selected");
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                //choiceRoute = 0;
             }
         });
-
     } // -- onCreate()
 
 
