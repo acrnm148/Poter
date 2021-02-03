@@ -4,6 +4,6 @@
 # Screenshots
 
 <div>
-<img width="400" src = "https://user-images.githubusercontent.com/67724306/104550741-d2585280-5678-11eb-8dad-bc6012d48f85.jpg">
-<img width="400" src = "https://user-images.githubusercontent.com/67724306/104547122-1cd5d100-5671-11eb-8621-96a445b95b5b.jpg">
+<img width="400" src = "https://user-images.githubusercontent.com/67724306/106705757-e537c480-6631-11eb-99b7-ab1c89a86fc2.png">
+<img width="400" src = "https://user-images.githubusercontent.com/67724306/106705771-eff25980-6631-11eb-9ee7-5cb9aa73061c.png">
 </div>
