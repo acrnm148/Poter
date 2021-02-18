@@ -130,6 +130,15 @@ public class MapActivity extends AppCompatActivity{
         gps.setMinTime(1000);
         gps.setMinDistance(5);
         gps.setProvider(gps.GPS_PROVIDER);
+        //안드로이드 기기의 API 버전이 23이상일 때 위치권한 허용에 관한 여부를 물음
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)!=PackageManager.PERMISSION_GRANTED){
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1); //위치권한 탐색 허용 관련 내용
+            }
+            return;
+        }
         gps.OpenGps();
         LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         LocationListener mLocationListener = new LocationListener() {
