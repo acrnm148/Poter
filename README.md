@@ -14,7 +14,7 @@
 
 ## 2️⃣ 개발 환경 & 기술 스택
 
-  - AndroidStudio, Java, GSON
+  - AndroidStudio, Java
   - TMap API
 
 <br>
